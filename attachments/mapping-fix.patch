@@ -1,0 +1,13 @@
+--- Geant4-11.4.3/G4DNAIRT.cc
++++ identity-assignment/G4DNAIRT.cc
+@@ -445,8 +445,8 @@
+     }
+   }
+ 
+-  auto pTrackA = const_cast<G4Track*>(pChanges->GetTrackA());
+-  auto pTrackB = const_cast<G4Track*>(pChanges->GetTrackB());
++  auto pTrackA = const_cast<G4Track*>(&trackA);
++  auto pTrackB = const_cast<G4Track*>(&trackB);
+ 
+   pTrackA->SetPosition(r1);
+   pTrackB->SetPosition(r2);

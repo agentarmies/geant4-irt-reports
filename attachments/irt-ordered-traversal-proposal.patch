@@ -1,0 +1,73 @@
+--- approved-adoption-v2/G4DNAIRT.cc
++++ proposed-ordered-IRT/G4DNAIRT.cc
+@@ -33,6 +33,7 @@
+ 
+ 
+ #include "G4DNAIRT.hh"
++#include "IRTOrderedTracks.hh"
+ #include "IRTCacheGuard.hh"
+ #include "G4ErrorFunction.hh"
+ #include "G4SystemOfUnits.hh"
+@@ -130,18 +131,16 @@
+   //hoang : if the first IRTSampling won't give any reactions, end the simu.
+   if(fReactionSet->Empty())
+   {
+-    for (auto pTrack : *fTrackHolder->GetMainList())
+-    {
++    forEachIRTTrack(*fTrackHolder->GetMainList(), [](G4Track* pTrack) {
+       pTrack->SetGlobalTime(G4Scheduler::Instance()->GetEndTime());
+-    }
++    });
+   }
+ }
+ 
+ void G4DNAIRT::SpaceBinning(){
+-  auto it_begin = fTrackHolder->GetMainList()->begin();
+-  while(it_begin != fTrackHolder->GetMainList()->end()){
+-
+-    G4ThreeVector position = it_begin->GetPosition();
++  forEachIRTTrack(*fTrackHolder->GetMainList(), [&](G4Track* track) {
++
++    G4ThreeVector position = track->GetPosition();
+ 
+     if ( fXMin > position.x() ) fXMin = position.x(); 
+     if ( fYMin > position.y() ) fYMin = position.y();
+@@ -151,8 +150,7 @@
+     if ( fYMax < position.y() ) fYMax = position.y();
+     if ( fZMax < position.z() ) fZMax = position.z();
+ 
+-    ++it_begin;
+-  }
++  });
+ 
+   fNx = G4int((fXMax-fXMin)/fRCutOff) == 0 ? 1 : G4int((fXMax-fXMin)/fRCutOff);
+   fNy = G4int((fYMax-fYMin)/fRCutOff) == 0 ? 1 : G4int((fYMax-fYMin)/fRCutOff);
+@@ -162,18 +160,16 @@
+ 
+ void G4DNAIRT::IRTSampling(){
+ 
+-  auto it_begin = fTrackHolder->GetMainList()->begin();
+-  while(it_begin != fTrackHolder->GetMainList()->end()){
+-    G4int I = FindBin(fNx, fXMin, fXMax, it_begin->GetPosition().x());
+-    G4int J = FindBin(fNy, fYMin, fYMax, it_begin->GetPosition().y());
+-    G4int K = FindBin(fNz, fZMin, fZMax, it_begin->GetPosition().z());
+-
+-    spaceBinned[I][J][K].push_back(*it_begin);
+-    RadIRTCacheGuard::inserted(I,J,K,*it_begin);
+-
+-    Sampling(*it_begin);
+-    ++it_begin;
+-  }
++  forEachIRTTrack(*fTrackHolder->GetMainList(), [&](G4Track* track) {
++    G4int I = FindBin(fNx, fXMin, fXMax, track->GetPosition().x());
++    G4int J = FindBin(fNy, fYMin, fYMax, track->GetPosition().y());
++    G4int K = FindBin(fNz, fZMin, fZMax, track->GetPosition().z());
++
++    spaceBinned[I][J][K].push_back(track);
++    RadIRTCacheGuard::inserted(I,J,K,track);
++
++    Sampling(track);
++  });
+ }
+ 
+ void G4DNAIRT::Sampling(G4Track* track){

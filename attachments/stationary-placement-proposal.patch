@@ -1,0 +1,18 @@
+--- guard-and-mapping/G4DNAIRT.cc
++++ proposed-final/G4DNAIRT.cc
+@@ -411,8 +411,13 @@
+   G4double globalTime = G4Scheduler::Instance()->GetGlobalTime();
+   G4double effectiveReactionRadius = pReactionData->GetEffectiveReactionRadius();
+ 
+-  const G4double D1 = pMoleculeA->GetDiffusionCoefficient();
+-  const G4double D2 = pMoleculeB->GetDiffusionCoefficient();
++  // Placement only: treat physically negligible diffusion as stationary.
++  // Keep molecular coefficients, reaction tables and IRT sampling unchanged.
++  const auto placementDiffusion = [](G4double d) {
++    return d > 0. && d <= 1e-100*m2/s ? 0. : d;
++  };
++  const G4double D1 = placementDiffusion(pMoleculeA->GetDiffusionCoefficient());
++  const G4double D2 = placementDiffusion(pMoleculeB->GetDiffusionCoefficient());
+ 
+   G4ThreeVector r1 = trackA.GetPosition();
+   G4ThreeVector r2 = trackB.GetPosition();
